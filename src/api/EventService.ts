@@ -29,7 +29,7 @@ export const EventService = {
   },
 
   joinEvent: async (eventId: number, userId: number): Promise<void> => {
-    await axios.post(`${API_URL}/event/${eventId}/join`, { userId });
+    await axios.post(`${API_URL}/event/${eventId}/join/${userId}`);
   },
 
   leaveEvent: async (eventId: number, userId: number): Promise<void> => {
