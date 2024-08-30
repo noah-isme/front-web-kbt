@@ -5,7 +5,9 @@ import UserForm from './pages/users/UserForm'
 import EventList from './pages/events/EventList'
 import EventForm from './pages/events/EventForm'
 import EventDetails from './pages/events/EventDetails'
-import { BrowserRouter as Router, Route, Routes, useParams, } from 'react-router-dom';
+import LocationMap from './components/LocationMap'
+import { BrowserRouter as Router, Route, Routes, } from 'react-router-dom';
+import LiveLocationMap from './components/LiveLocationMap'
 
 
 
@@ -16,16 +18,21 @@ function App() {
   // console.log(eventId)
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/users" element={<UserList />} />
-        <Route path="/user/new" element={<UserForm />} />
-        <Route path="/user/edit/:userId" element={<UserForm />} />
-        <Route path="/events" element={<EventList />} />
-        <Route path="/event/:eventId" element={<EventDetails />} />
-        <Route path="/event/:eventId/edit" element={<EventForm />} />
-      </Routes>
-    </Router>
+    // <Router>
+    //   <Routes>
+    //     <Route path="/users" element={<UserList />} />
+    //     <Route path="/user/new" element={<UserForm />} />
+    //     <Route path="/user/edit/:userId" element={<UserForm />} />
+    //     <Route path="/events" element={<EventList />} />
+    //     <Route path="/event/:eventId" element={<EventDetails />} />
+    //     <Route path="/event/:eventId/edit" element={<EventForm />} />
+    //     <Route path="/maps" element={<LocationMap />} />
+    //   </Routes>
+    // </Router>
+    <div>
+      <h1>Live Location Simulation</h1>
+      <LiveLocationMap />
+    </div>
   )
 }
 
