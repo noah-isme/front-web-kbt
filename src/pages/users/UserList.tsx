@@ -1,111 +1,91 @@
-import React, { useState, useEffect } from 'react';
-import { User } from '../../types/UserTypes';
-import { api } from '../../api/api';
-import { 
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
-  Paper, Button, TextField, Typography, Box, IconButton
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  CircularProgress,
+  Button,
+  Container,
+  Typography,
+} from "@mui/material";
+import { User } from "../../types/UserTypes";
+import { UserService } from "../../api/UserService";
 
 const UserList: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [newUser, setNewUser] = useState<Omit<User, 'id'>>({ username: '', email: '' });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await UserService.getUsers();
+        setUsers(response);
+        console.log(response);
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to fetch users");
+        setLoading(false);
+      }
+    };
+
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const fetchedUsers = await api.getUsers();
-      setUsers(fetchedUsers);
-      setError(null);
-    } catch (err) {
-      setError('Failed to fetch users');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addUser = async () => {
-    try {
-      const user = await api.createUser(newUser);
-      setUsers([...users, user]);
-      setNewUser({ username: '', email: '' });
-      setError(null);
-    } catch (err) {
-      setError('Failed to add user');
-    }
-  };
-
-  const deleteUser = async (id: number) => {
-    try {
-      await api.deleteUser(id);
-      setUsers(users.filter(user => user.id !== id));
-      setError(null);
-    } catch (err) {
-      setError('Failed to delete user');
-    }
-  };
-
-  if (loading) return <Typography>Loading...</Typography>;
-  if (error) return <Typography color="error">Error: {error}</Typography>;
-  if (!users.length) return <Typography>No users found</Typography>;
+  if (loading) return <CircularProgress />;
+  if (error) return <div>{error}</div>;
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 800, margin: 'auto', padding: 2 }}>
-      <Typography variant="h4" gutterBottom>User List</Typography>
+    <Container>
+      <Typography variant="h4" gutterBottom>
+        User List
+      </Typography>
+      <Button
+        component={RouterLink}
+        to="/user/new"
+        variant="contained"
+        color="primary"
+        style={{ marginBottom: "20px" }}
+      >
+        Add New User
+      </Button>
       <TableContainer component={Paper}>
-        <Table>
+        <Table sx={{ minWidth: 650 }} aria-label="user table">
           <TableHead>
             <TableRow>
+              <TableCell>ID</TableCell>
               <TableCell>Name</TableCell>
               <TableCell>Email</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.map(user => (
-              <TableRow key={user.id}>
+            {users.map((user) => (
+              <TableRow key={user.ID}>
+                <TableCell>{user.ID}</TableCell>
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell align="right">
-                  <IconButton component={Link} to={`/users/edit/${user.id}`}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton onClick={() => deleteUser(user.id)} color="error">
-                    <DeleteIcon />
-                  </IconButton>
+                <TableCell>
+                  <Button
+                    component={RouterLink}
+                    to={`/user/edit/${user.ID}`}
+                    variant="outlined"
+                    color="primary"
+                  >
+                    Edit
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-
-      <Box sx={{ marginTop: 4 }}>
-        <Typography variant="h5" gutterBottom>Add New User</Typography>
-        <Box component="form" sx={{ display: 'flex', gap: 2 }}>
-          <TextField
-            label="Name"
-            value={newUser.username}
-            onChange={e => setNewUser({ ...newUser, username: e.target.value })}
-          />
-          <TextField
-            label="Email"
-            type="email"
-            value={newUser.email}
-            onChange={e => setNewUser({ ...newUser, email: e.target.value })}
-          />
-          <Button variant="contained" onClick={addUser}>Add User</Button>
-        </Box>
-      </Box>
-    </Box>
+    </Container>
   );
 };
 
