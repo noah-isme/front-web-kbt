@@ -38,7 +38,7 @@ const EventList: React.FC = () => {
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
-              <TableCell>Date</TableCell>
+              {/* <TableCell>Date</TableCell> */}
               <TableCell>Description</TableCell>
               <TableCell>Participants</TableCell>
               <TableCell>Actions</TableCell>
@@ -48,7 +48,7 @@ const EventList: React.FC = () => {
             {events.map((event) => (
               <TableRow key={event.ID}>
                 <TableCell>{event.name}</TableCell>
-                <TableCell>{new Date(event.CreatedAt).toLocaleDateString()}</TableCell>
+                {/* <TableCell>{new Date(event.CreatedAt).toLocaleDateString()}</TableCell> */}
                 <TableCell>{event.description}</TableCell>
                 <TableCell>{event.users?.length || 0}</TableCell>
                 <TableCell>

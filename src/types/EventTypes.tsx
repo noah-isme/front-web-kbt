@@ -4,6 +4,7 @@ export interface Event {
     ID?: number;
     name: string;
     description: string;
-    CreatedAt: Date;
+    gpx_route?: File;
+    // CreatedAt: Date;
     users?: User[];
   }
