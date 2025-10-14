@@ -9,4 +9,6 @@ export interface AuthResponse {
   access: string;
   refresh: string;
   user: User;
+  issuedAt?: number; // Unix timestamp (seconds)
+  expiresIn?: number; // Unix timestamp (seconds)
 }

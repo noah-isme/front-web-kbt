@@ -12,7 +12,8 @@ describe('auth API via MSW', () => {
       password: 'admin123',
     });
 
-    expect(response.data.token).toBe('mock-kbt-token');
+    expect(response.data.access).toBe('mock-access-token');
+    expect(response.data.refresh).toBe('mock-refresh-token');
     expect(response.data.user.email).toBe('admin@kbt.local');
     expect(response.message).toContain('Login berhasil');
   });
@@ -24,9 +25,8 @@ describe('auth API via MSW', () => {
         password: 'salah',
       }),
     ).rejects.toMatchObject({
-      response: {
-        status: 401,
-      },
+      code: 401,
+      message: 'Email atau password tidak valid',
     });
   });
 });

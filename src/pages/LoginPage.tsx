@@ -11,10 +11,12 @@ import {
   Typography,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
+  const { t } = useTranslation(); // Initialize useTranslation
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoading } = useAuth();
   const [email, setEmail] = useState('');
@@ -51,11 +53,11 @@ const LoginPage = () => {
                 KBT Control Panel
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Sign in with your administrator account.
+                {t('login_title')}
               </Typography>
             </Stack>
             <TextField
-              label="Email"
+              label={t('login_email_label')}
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -63,7 +65,7 @@ const LoginPage = () => {
               required
             />
             <TextField
-              label="Password"
+              label={t('login_password_label')}
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -77,7 +79,7 @@ const LoginPage = () => {
               startIcon={<LoginIcon />}
               disabled={isLoading}
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? t('signing_in') : t('login_button')}
             </Button>
           </Stack>
         </CardContent>

@@ -25,7 +25,8 @@ describe('users API via MSW', () => {
 
   it('melempar error ketika pengguna tidak ditemukan', async () => {
     await expect(fetchUser('user-tidak-ada')).rejects.toMatchObject({
-      response: { status: 404 },
+      code: 404,
+      message: 'Pengguna tidak ditemukan',
     });
   });
 

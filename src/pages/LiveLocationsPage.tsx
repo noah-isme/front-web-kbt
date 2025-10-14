@@ -13,7 +13,7 @@ const LiveLocationsPage = () => {
   const { events, eventsQuery } = useEvents();
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-  const { liveLocations, isConnected } = useLiveLocation(selectedEventId);
+  const { liveLocations, status } = useLiveLocation(selectedEventId);
 
   if (eventsQuery.isLoading) {
     return <LoadingState message="Loading events..." />;
@@ -24,6 +24,8 @@ const LiveLocationsPage = () => {
     return <ErrorState message={message} />;
   }
 
+  const connectionStatusText = `(${status})`;
+
   return (
     <Box>
       <Stack spacing={1} mb={3}>
@@ -31,7 +33,7 @@ const LiveLocationsPage = () => {
           Live Locations
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Monitor real-time locations of participants during events. {isConnected ? '(Connected)' : '(Disconnected)'}
+          Monitor real-time locations of participants during events. {connectionStatusText}
         </Typography>
       </Stack>
 
@@ -53,8 +55,10 @@ const LiveLocationsPage = () => {
 
       {!selectedEventId ? (
         <EmptyState message="Please select an event to view live locations." />
-      ) : !isConnected ? (
-        <LoadingState message="Connecting to live location service..." />
+      ) : status === 'connecting' || status === 'reconnecting' ? (
+        <LoadingState message={`Connecting to live location service ${connectionStatusText}...`} />
+      ) : status === 'error' || status === 'closed' ? (
+        <ErrorState message={`Live location service ${connectionStatusText}. Please try again.`} />
       ) : liveLocations.length === 0 ? (
         <EmptyState message="No live locations available for this event yet." />
       ) : (
@@ -65,4 +69,3 @@ const LiveLocationsPage = () => {
 };
 
 export default LiveLocationsPage;
-

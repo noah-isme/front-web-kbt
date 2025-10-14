@@ -28,7 +28,8 @@ describe('events API via MSW', () => {
 
   it('melempar error 404 ketika event tidak ditemukan', async () => {
     await expect(fetchEvent('event-tidak-ada')).rejects.toMatchObject({
-      response: { status: 404 },
+      code: 404,
+      message: 'Event tidak ditemukan',
     });
   });
 

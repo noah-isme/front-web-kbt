@@ -1,36 +1,88 @@
+import React, { lazy, Suspense } from 'react';
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 
+import LoadingState from './components/common/LoadingState';
 import { useAuth } from './context/AuthContext';
 import MainLayout from './layout/MainLayout';
-import DashboardPage from './pages/DashboardPage';
-import EventsPage from './pages/EventsPage';
-import LiveLocationsPage from './pages/LiveLocationsPage';
 import LoginPage from './pages/LoginPage';
-import UsersPage from './pages/UsersPage';
+import { UserRole } from './types';
+
+// Lazy-loaded page components
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const EventsPage = lazy(() => import('./pages/EventsPage'));
+const LiveLocationsPage = lazy(() => import('./pages/LiveLocationsPage'));
+const UsersPage = lazy(() => import('./pages/UsersPage'));
 
 const App = () => (
   <Routes>
     <Route path="/login" element={<LoginPage />} />
-    <Route element={<RequireAuth />}>
+    {/* Protected routes that require authentication */}
+    <Route element={<ProtectedRoute />}>
       <Route element={<MainLayout />}>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/users" element={<UsersPage />} />
-        <Route path="/events" element={<EventsPage />} />
-        <Route path="/locations" element={<LiveLocationsPage />} />
+        <Route
+          path="/"
+          element={
+            <Suspense fallback={<LoadingState message="Loading Dashboard..." />}>
+              <DashboardPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/events"
+          element={
+            <Suspense fallback={<LoadingState message="Loading Events..." />}>
+              <EventsPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/locations"
+          element={
+            <Suspense fallback={<LoadingState message="Loading Live Locations..." />}>
+              <LiveLocationsPage />
+            </Suspense>
+          }
+        />
+        {/* Example of role-based protection */}
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'operator']}>
+              <Suspense fallback={<LoadingState message="Loading Users..." />}>
+                <UsersPage />
+              </Suspense>
+            </ProtectedRoute>
+          }
+        />
       </Route>
     </Route>
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>
 );
 
-const RequireAuth = () => {
-  const { isAuthenticated } = useAuth();
+interface ProtectedRouteProps {
+  allowedRoles?: UserRole[];
+  children?: React.ReactNode; // Add children prop for nested routes
+}
+
+const ProtectedRoute = ({ allowedRoles, children }: ProtectedRouteProps) => {
+  const { isAuthenticated, user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <LoadingState message="Checking authentication..." />;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  return <Outlet />;
+  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    // User is authenticated but does not have the required role
+    // Redirect to a general dashboard or an unauthorized page
+    return <Navigate to="/" replace />; 
+  }
+
+  return children ? <>{children}</> : <Outlet />;
 };
 
 export default App;

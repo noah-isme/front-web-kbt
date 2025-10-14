@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 
 import { Box, Grid, Paper, Stack, Typography } from '@mui/material';
 
+import DetailSkeleton from '../components/common/DetailSkeleton';
 import EmptyState from '../components/common/EmptyState';
 import ErrorState from '../components/common/ErrorState';
-import LoadingState from '../components/common/LoadingState';
+import ListSkeleton from '../components/common/ListSkeleton';
 import EventDetailCard from '../components/events/EventDetailCard';
 import EventList from '../components/events/EventList';
 import { useEvents } from '../hooks/useEvents';
@@ -19,10 +20,6 @@ const EventsPage = () => {
       setSelectedEvent(events[0]);
     }
   }, [events, selectedEvent]);
-
-  if (eventsQuery.isLoading) {
-    return <LoadingState message="Loading events..." />;
-  }
 
   if (eventsQuery.isError) {
     const message = eventsQuery.error instanceof Error ? eventsQuery.error.message : 'Failed to load events';
@@ -40,7 +37,20 @@ const EventsPage = () => {
         </Typography>
       </Stack>
 
-      {events.length === 0 ? (
+      {eventsQuery.isLoading ? (
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={5} lg={4}>
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <ListSkeleton count={5} height={70} />
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={7} lg={8}>
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <DetailSkeleton />
+            </Paper>
+          </Grid>
+        </Grid>
+      ) : events.length === 0 ? (
         <EmptyState message="No events available. Create an event from the backend to get started." />
       ) : (
         <Grid container spacing={3}>
