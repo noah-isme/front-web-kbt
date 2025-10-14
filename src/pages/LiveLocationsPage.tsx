@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import MapIcon from '@mui/icons-material/Map';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { Box, Button, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { Box, FormControl, InputLabel, MenuItem, Select, Stack, Typography } from '@mui/material';
 
 import EmptyState from '../components/common/EmptyState';
 import ErrorState from '../components/common/ErrorState';
@@ -13,20 +11,9 @@ import { useLiveLocation } from '../hooks/useLiveLocation';
 
 const LiveLocationsPage = () => {
   const { events, eventsQuery } = useEvents();
-  const [selectedEventId, setSelectedEventId] = useState<string>('');
-  const liveLocationQuery = useLiveLocation(selectedEventId || null, Boolean(selectedEventId));
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (events.length > 0 && !selectedEventId) {
-      setSelectedEventId(events[0].id);
-    }
-  }, [events, selectedEventId]);
-
-  const handleRefresh = () => {
-    if (selectedEventId) {
-      liveLocationQuery.refetch();
-    }
-  };
+  const { liveLocations, isConnected } = useLiveLocation(selectedEventId);
 
   if (eventsQuery.isLoading) {
     return <LoadingState message="Loading events..." />;
@@ -41,72 +28,41 @@ const LiveLocationsPage = () => {
     <Box>
       <Stack spacing={1} mb={3}>
         <Typography variant="h4" fontWeight={600}>
-          Live Location
+          Live Locations
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Monitor live participant locations for the selected event. Data refreshes automatically every 5 seconds.
+          Monitor real-time locations of participants during events. {isConnected ? '(Connected)' : '(Disconnected)'}
         </Typography>
       </Stack>
 
-      {events.length === 0 ? (
-        <EmptyState message="No events available. Locations require an active event." />
-      ) : (
-        <Stack spacing={3}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
-            <TextField
-              select
-              label="Event"
-              value={selectedEventId}
-              onChange={(event) => setSelectedEventId(event.target.value)}
-              sx={{ minWidth: 240 }}
-            >
-              {events.map((event) => (
-                <MenuItem key={event.id} value={event.id}>
-                  {event.title}
-                </MenuItem>
-              ))}
-            </TextField>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleRefresh}
-              disabled={!selectedEventId || liveLocationQuery.isFetching}
-            >
-              Refresh now
-            </Button>
-          </Stack>
+      <FormControl fullWidth sx={{ mb: 3 }}>
+        <InputLabel id="event-select-label">Select Event</InputLabel>
+        <Select
+          labelId="event-select-label"
+          value={selectedEventId || ''}
+          label="Select Event"
+          onChange={(e) => setSelectedEventId(e.target.value as string)}
+        >
+          {events.map((event) => (
+            <MenuItem key={event.id} value={event.id}>
+              {event.title}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
 
-          {liveLocationQuery.isLoading ? (
-            <LoadingState message="Loading live locations..." />
-          ) : liveLocationQuery.isError ? (
-            <ErrorState
-              title="Unable to load locations"
-              message={
-                liveLocationQuery.error instanceof Error
-                  ? liveLocationQuery.error.message
-                  : 'Unknown error while fetching live locations'
-              }
-            />
-          ) : (
-            <Box>
-              <Stack direction="row" spacing={1} alignItems="center" mb={1}>
-                <MapIcon color="primary" />
-                <Typography variant="subtitle1" fontWeight={600}>
-                  Active locations
-                </Typography>
-                {liveLocationQuery.isFetching && (
-                  <Typography variant="caption" color="text.secondary">
-                    Updating...
-                  </Typography>
-                )}
-              </Stack>
-              <LocationMap locations={liveLocationQuery.data?.data ?? []} />
-            </Box>
-          )}
-        </Stack>
+      {!selectedEventId ? (
+        <EmptyState message="Please select an event to view live locations." />
+      ) : !isConnected ? (
+        <LoadingState message="Connecting to live location service..." />
+      ) : liveLocations.length === 0 ? (
+        <EmptyState message="No live locations available for this event yet." />
+      ) : (
+        <LocationMap locations={liveLocations} />
       )}
     </Box>
   );
 };
 
 export default LiveLocationsPage;
+

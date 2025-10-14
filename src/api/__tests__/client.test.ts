@@ -50,7 +50,7 @@ describe('apiClient configuration', () => {
     const module = await import('../client');
     const { apiClient } = module;
 
-    window.localStorage.setItem('kbt_token', 'test-token');
+    window.localStorage.setItem('access_token', 'test-token');
 
     const interceptor = apiClient.interceptors.request.handlers[0];
     expect(interceptor?.fulfilled).toBeDefined();

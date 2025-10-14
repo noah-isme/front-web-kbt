@@ -1,8 +1,9 @@
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import PlaceIcon from '@mui/icons-material/Place';
 import ScheduleIcon from '@mui/icons-material/Schedule';
-import { Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
+import { Card, CardContent, Stack, Typography, Divider, Chip } from '@mui/material';
 
+import EventFileUpload from './EventFileUpload';
 import { Event } from '../../types';
 import dayjs from '../../utils/dayjs';
 
@@ -70,6 +71,11 @@ const EventDetailCard = ({ event }: EventDetailCardProps) => {
             <ScheduleIcon color="action" />
             <Chip label={`Updated ${dayjs(event.updatedAt).fromNow()}`} variant="outlined" />
           </Stack>
+          {/* Integrate EventFileUpload component */}
+          <EventFileUpload eventId={event.id} onUploadSuccess={() => {
+            // Handle successful upload, e.g., refetch event details or show a message
+            console.log('GPX upload successful for event:', event.id);
+          }} />
         </Stack>
       </CardContent>
     </Card>

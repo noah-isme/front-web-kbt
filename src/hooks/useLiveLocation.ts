@@ -1,18 +1,34 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 
-import { fetchLiveLocations } from '../api/locations';
-import { ApiResponse, LiveLocation } from '../types';
+import { LiveLocation } from '../types';
+import useWebSocket from './useWebSocket';
 
-export const useLiveLocation = (eventId: string | null, enabled = true) => {
-  return useQuery<ApiResponse<LiveLocation[]>>({
-    queryKey: ['live-location', eventId],
-    queryFn: () => {
-      if (!eventId) {
-        throw new Error('Event ID is required');
+const WS_BASE_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8080/ws';
+
+export const useLiveLocation = (eventId: string | null) => {
+  const [liveLocations, setLiveLocations] = useState<LiveLocation[]>([]);
+  const { data, isConnected } = useWebSocket(eventId ? `${WS_BASE_URL}/events/${eventId}/live/` : '');
+
+  useEffect(() => {
+    if (data && eventId) {
+      // Assuming 'data' from WebSocket is an array of LiveLocation or a single LiveLocation
+      // This logic might need adjustment based on actual WebSocket message format
+      if (Array.isArray(data)) {
+        setLiveLocations(data);
+      } else {
+        // If it's a single update, find and update or add it
+        setLiveLocations((prevLocations) => {
+          const existingIndex = prevLocations.findIndex((loc) => loc.id === data.id);
+          if (existingIndex > -1) {
+            const newLocations = [...prevLocations];
+            newLocations[existingIndex] = data;
+            return newLocations;
+          }
+          return [...prevLocations, data];
+        });
       }
-      return fetchLiveLocations(eventId);
-    },
-    enabled: Boolean(eventId) && enabled,
-    refetchInterval: 5000,
-  });
+    }
+  }, [data, eventId]);
+
+  return { liveLocations, isConnected };
 };

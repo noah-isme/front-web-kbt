@@ -1,12 +1,13 @@
-import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { loginRequest } from '../api/auth';
-import { AuthResponse, LoginPayload, User } from '../types';
+import { ApiResponse, AuthResponse, LoginPayload, User } from '../types';
 
 interface AuthContextValue {
   user: User | null;
-  token: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<void>;
@@ -15,40 +16,35 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const storageKey = 'kbt_auth';
-const tokenKey = 'kbt_token';
-
-const loadStoredAuth = (): AuthResponse | null => {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-  try {
-    const stored = window.localStorage.getItem(storageKey);
-    if (stored) {
-      return JSON.parse(stored) as AuthResponse;
-    }
-  } catch (error) {
-    console.error('Failed to parse stored auth state', error);
-  }
-  return null;
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const stored = loadStoredAuth();
-  const [user, setUser] = useState<User | null>(stored?.user ?? null);
-  const [token, setToken] = useState<string | null>(stored?.token ?? null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // Set to true initially to indicate loading auth state
 
-  const persistAuth = useCallback((auth: AuthResponse | null) => {
+  useEffect(() => {
+    const storedAccessToken = localStorage.getItem('access_token');
+    const storedRefreshToken = localStorage.getItem('refresh_token');
+
+    if (storedAccessToken && storedRefreshToken) {
+      setAccessToken(storedAccessToken);
+      setRefreshToken(storedRefreshToken);
+      // Optionally, fetch user profile here if needed
+      // For now, we'll assume user info comes with login or is not critical for initial auth state
+    }
+    setIsLoading(false);
+  }, []);
+
+  const persistAuth = useCallback((access: string | null, refresh: string | null) => {
     if (typeof window === 'undefined') {
       return;
     }
-    if (auth) {
-      window.localStorage.setItem(storageKey, JSON.stringify(auth));
-      window.localStorage.setItem(tokenKey, auth.token);
+    if (access && refresh) {
+      window.localStorage.setItem('access_token', access);
+      window.localStorage.setItem('refresh_token', refresh);
     } else {
-      window.localStorage.removeItem(storageKey);
-      window.localStorage.removeItem(tokenKey);
+      window.localStorage.removeItem('access_token');
+      window.localStorage.removeItem('refresh_token');
     }
   }, []);
 
@@ -56,14 +52,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     async (payload: LoginPayload) => {
       setIsLoading(true);
       try {
-        const response = await loginRequest(payload);
+        const response: ApiResponse<AuthResponse> = await loginRequest(payload);
         if (response.error) {
           throw new Error(response.error);
         }
-        const auth = response.data;
-        setUser(auth.user);
-        setToken(auth.token);
-        persistAuth(auth);
+        const { access, refresh, user: loggedInUser } = response.data;
+        setUser(loggedInUser);
+        setAccessToken(access);
+        setRefreshToken(refresh);
+        persistAuth(access, refresh);
         toast.success(response.message ?? 'Successfully logged in');
       } catch (error) {
         const message =
@@ -79,20 +76,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(() => {
     setUser(null);
-    setToken(null);
-    persistAuth(null);
+    setAccessToken(null);
+    setRefreshToken(null);
+    persistAuth(null, null);
   }, [persistAuth]);
 
   const value = useMemo(
     () => ({
       user,
-      token,
-      isAuthenticated: Boolean(token),
+      accessToken,
+      refreshToken,
+      isAuthenticated: Boolean(accessToken),
       isLoading,
       login,
       logout,
     }),
-    [isLoading, login, logout, token, user],
+    [accessToken, isLoading, login, logout, refreshToken, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -105,3 +104,4 @@ export const useAuth = (): AuthContextValue => {
   }
   return context;
 };
+

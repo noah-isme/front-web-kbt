@@ -28,3 +28,15 @@ export const deleteEvent = async (id: string): Promise<ApiResponse<{ id: string 
   const { data } = await apiClient.delete<ApiResponse<{ id: string }>>(`/events/${id}`);
   return data;
 };
+
+export const uploadEventGpx = async (eventId: string, file: File): Promise<ApiResponse<Event>> => {
+  const formData = new FormData();
+  formData.append('gpx_file', file); // Assuming the backend expects 'gpx_file' as the field name
+
+  const { data } = await apiClient.post<ApiResponse<Event>>(`/events/${eventId}/upload-gpx/`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return data;
+};

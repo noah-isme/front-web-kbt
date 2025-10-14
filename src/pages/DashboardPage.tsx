@@ -5,6 +5,7 @@ import MapIcon from '@mui/icons-material/Map';
 import TodayIcon from '@mui/icons-material/Today';
 import { Card, CardContent, Grid, Stack, Typography } from '@mui/material';
 
+import ActivityChart from '../components/charts/ActivityChart'; // Import ActivityChart
 import LoadingState from '../components/common/LoadingState';
 import { useEvents } from '../hooks/useEvents';
 import { useUsers } from '../hooks/useUsers';
@@ -14,6 +15,13 @@ const DashboardPage = () => {
   const { events, eventsQuery } = useEvents();
 
   const isLoading = usersQuery.isLoading || eventsQuery.isLoading;
+
+  // Dummy data for ActivityChart
+  const activityChartData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+    distances: [65, 59, 80, 81, 56, 55, 40],
+    elevations: [28, 48, 40, 19, 86, 27, 90],
+  };
 
   if (isLoading) {
     return <LoadingState message="Fetching dashboard data..." />;
@@ -53,6 +61,13 @@ const DashboardPage = () => {
             value={events.length > 0 ? 'Ready' : 'Pending'}
             subtitle={events.length > 0 ? 'Live location available' : 'Create an event to enable tracking'}
           />
+        </Grid>
+        <Grid item xs={12}> {/* New Grid item for the chart */}
+          <Card>
+            <CardContent>
+              <ActivityChart data={activityChartData} />
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
     </Stack>

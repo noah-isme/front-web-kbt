@@ -22,19 +22,39 @@ const queryClient = new QueryClient({
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 
-root.render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ThemeProvider>
-          <AuthProvider>
-            <CssBaseline />
-            <App />
-            <Toaster position="top-right" />
-          </AuthProvider>
-        </ThemeProvider>
-      </BrowserRouter>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
-  </React.StrictMode>,
-);
+const renderApp = () => {
+  root.render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <ThemeProvider>
+            <AuthProvider>
+              <CssBaseline />
+              <App />
+              <Toaster position="top-right" />
+            </AuthProvider>
+          </ThemeProvider>
+        </BrowserRouter>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    </React.StrictMode>,
+  );
+};
+
+const enableMocking = async () => {
+  if (process.env.NODE_ENV !== 'development') {
+    return;
+  }
+  const { worker } = await import('./mocks/browser');
+  await worker.start({
+    onUnhandledRequest: 'bypass',
+  });
+};
+
+enableMocking()
+  .catch((error) => {
+    console.error('Failed to start the Mock Service Worker', error);
+  })
+  .finally(() => {
+    renderApp();
+  });
