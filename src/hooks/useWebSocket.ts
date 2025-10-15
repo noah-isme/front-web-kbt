@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-type WebSocketStatus = 'connecting' | 'open' | 'reconnecting' | 'closed' | 'error';
+export type WebSocketStatus = 'connecting' | 'open' | 'reconnecting' | 'closed' | 'error';
 
 interface UseWebSocketOptions {
   maxRetries?: number;
@@ -34,7 +34,6 @@ const useWebSocket = (url: string, options?: UseWebSocketOptions) => {
     ws.onopen = () => {
       console.log('WebSocket connected');
       setStatus('open');
-      retryCountRef.current = 0;
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = null;
@@ -72,23 +71,34 @@ const useWebSocket = (url: string, options?: UseWebSocketOptions) => {
 
     ws.onclose = () => {
       console.log('WebSocket disconnected');
-      setStatus('closed');
       if (heartbeatIntervalRef.current) {
         clearInterval(heartbeatIntervalRef.current);
         heartbeatIntervalRef.current = null;
       }
 
-      if (retryCountRef.current < maxRetries) {
-        const delay = Math.min(baseDelayMs * (2 ** retryCountRef.current), 30000) + Math.random() * 1000; // Max 30s delay + jitter
-        retryCountRef.current += 1;
-        console.log(`Attempting to reconnect in ${delay}ms (attempt ${retryCountRef.current}/${maxRetries})`);
-        reconnectTimeoutRef.current = setTimeout(connect, delay);
-      } else {
+      const nextRetryCount = retryCountRef.current + 1;
+      const delay = Math.min(baseDelayMs * (2 ** retryCountRef.current), 30000);
+
+      if (nextRetryCount > maxRetries) {
         console.warn('Max WebSocket reconnect retries reached.');
-        setStatus('error'); // Or 'closed' depending on desired final state
+        retryCountRef.current = nextRetryCount;
+        setStatus('reconnecting');
+        reconnectTimeoutRef.current = setTimeout(() => {
+          setStatus('error');
+        }, delay);
+        return;
       }
+
+      retryCountRef.current = nextRetryCount;
+      console.log(`Attempting to reconnect in ${delay}ms (attempt ${nextRetryCount}/${maxRetries})`);
+      setStatus('reconnecting');
+      reconnectTimeoutRef.current = setTimeout(connect, delay);
     };
   }, [url, maxRetries, baseDelayMs, heartbeatMs]);
+
+  useEffect(() => {
+    retryCountRef.current = 0;
+  }, [url]);
 
   useEffect(() => {
     connect();
