@@ -1,19 +1,9 @@
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import {
-  IconButton,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
 
 import { User } from '../../types';
+import DataTable, { DataTableColumn } from '../common/DataTable';
 
 interface UserTableProps {
   users: User[];
@@ -22,44 +12,55 @@ interface UserTableProps {
 }
 
 const UserTable = ({ users, onEdit, onDelete }: UserTableProps) => {
+  const columns: DataTableColumn<User>[] = [
+    {
+      id: 'name',
+      label: 'Name',
+      minWidth: 160,
+      render: (row) => <Typography fontWeight={600}>{row.name}</Typography>,
+    },
+    { id: 'email', label: 'Email', minWidth: 200 },
+    {
+      id: 'phone',
+      label: 'Phone',
+      minWidth: 160,
+      render: (row) => row.phone ?? '-',
+    },
+    {
+      id: 'role',
+      label: 'Role',
+      render: (row) => (
+        <Typography sx={{ textTransform: 'capitalize' }}>{row.role}</Typography>
+      ),
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      align: 'right',
+      render: (row) => (
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Tooltip title="Edit user">
+            <IconButton onClick={() => onEdit(row)} size="small">
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete user">
+            <IconButton onClick={() => onDelete(row)} size="small" color="error">
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      ),
+    },
+  ];
+
   return (
-    <TableContainer component={Paper}>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Email</TableCell>
-            <TableCell>Phone</TableCell>
-            <TableCell>Role</TableCell>
-            <TableCell align="right">Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id} hover>
-              <TableCell>
-                <Typography fontWeight={600}>{user.name}</Typography>
-              </TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{user.phone ?? '-'}</TableCell>
-              <TableCell sx={{ textTransform: 'capitalize' }}>{user.role}</TableCell>
-              <TableCell align="right">
-                <Tooltip title="Edit user">
-                  <IconButton onClick={() => onEdit(user)} size="small">
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Delete user">
-                  <IconButton onClick={() => onDelete(user)} size="small" color="error">
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <DataTable
+      columns={columns}
+      data={users}
+      getRowId={(row) => row.id}
+      rowsPerPageOptions={[5, 10, 25, 50]}
+    />
   );
 };
 
